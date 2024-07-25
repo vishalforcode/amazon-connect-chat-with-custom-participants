@@ -1,11 +1,18 @@
-## My Project
+## Amazon Connect Chat With Custom Participants
 
-TODO: Fill this README out!
+## Useful commands
 
-Be sure to:
+* `cdk bookstrap`       preps default AWS account/region for CDK deployments
+* `cdk deploy --parameters instanceArn=<instanceArn>`      deploy this stack to your default AWS account/region
+* `cdk diff`        compare deployed stack with current state
+* `cdk synth`       emits the synthesized CloudFormation template
 
-* Change the title in this README
-* Edit your repository description on GitHub
+
+## Architecture Diagram
+![Architecture Diagram](amazon-connect-custom-bot-architecture.png)
+
+## Sequence Diagram
+![Sequence Diagram](amazon-connect-custom-bot-sequence.png)
 
 ## Security
 

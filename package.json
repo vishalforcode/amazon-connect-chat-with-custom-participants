@@ -1,0 +1,32 @@
+{
+  "name": "amazon-connect-custom-bot",
+  "version": "0.1.0",
+  "bin": {
+    "amazon-connect-custom-bot": "bin/amazon-connect-custom-bot.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "cdk": "cdk"
+  },
+  "devDependencies": {
+    "@tsconfig/node20": "^20.1.2",
+    "@types/aws-lambda": "^8.10.119",
+    "@types/jest": "^29.5.3",
+    "@types/node": "^20.4.5",
+    "aws-cdk": "2.90.0",
+    "esbuild": "^0.19.0",
+    "ts-node": "^10.9.1",
+    "typescript": "~5.1.6"
+  },
+  "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.495.0",
+    "@aws-sdk/client-connect": "^3.495.0",
+    "@aws-sdk/client-connectparticipant": "^3.495.0",
+    "@aws-sdk/client-dynamodb": "^3.495.0",
+    "@aws-sdk/lib-dynamodb": "^3.495.0",
+    "aws-cdk-lib": "2.122.0",
+    "cdk-nag": "^2.27.164",
+    "constructs": "^10.0.0"
+  }
+}
