@@ -2,10 +2,6 @@ import {
     ConnectParticipantClient,
     DisconnectParticipantCommand,
     SendMessageCommand,
-    GetTranscriptCommand,
-    ScanDirection,
-    Item,
-    SortKey,
     SendEventCommand,
 } from "@aws-sdk/client-connectparticipant";
 import { BedrockRuntimeClient, InvokeModelCommand  } from "@aws-sdk/client-bedrock-runtime";

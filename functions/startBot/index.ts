@@ -71,7 +71,7 @@ async function createParticipant(contactId: string): Promise<CreateParticipantCo
         ContactId: contactId,
         ParticipantDetails: {
             ParticipantRole: "CUSTOM_BOT",
-            DisplayName: "Bedrock",
+            DisplayName: "Chat Bot",
         },
     });
 
