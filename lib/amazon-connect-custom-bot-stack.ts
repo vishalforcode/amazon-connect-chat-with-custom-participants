@@ -57,8 +57,8 @@ export class AmazonConnectCustomBotStack extends Stack {
             },
         });
 
-        const bedrockBot = new NodejsFunction(this, "bedrockBot", {
-            entry: "functions/bedrockBot/index.ts",
+        const chatBot = new NodejsFunction(this, "chatBot", {
+            entry: "functions/chatBot/index.ts",
             runtime: Runtime.NODEJS_20_X,
             bundling: {
                 minify: true, // minify code, defaults to false
@@ -76,7 +76,7 @@ export class AmazonConnectCustomBotStack extends Stack {
         });
 
         // Subscriptions
-        chatStreamingTopic.addSubscription(new LambdaSubscription(bedrockBot, {
+        chatStreamingTopic.addSubscription(new LambdaSubscription(chatBot, {
             filterPolicy: {
                 ParticipantRole: SubscriptionFilter.stringFilter({
                     allowlist: ['CUSTOMER'],
@@ -92,7 +92,7 @@ export class AmazonConnectCustomBotStack extends Stack {
             ArnLike: { "aws:SourceArn": instanceArn },
         });
         chatContactsTable.grantReadWriteData(startBot);
-        chatContactsTable.grantReadData(bedrockBot);
+        chatContactsTable.grantReadData(chatBot);
 
         startBot.addToRolePolicy(
             new PolicyStatement({
@@ -104,7 +104,7 @@ export class AmazonConnectCustomBotStack extends Stack {
 
         startBot.grantInvoke(connectServicePrincipal);
 
-        bedrockBot.addToRolePolicy(
+        chatBot.addToRolePolicy(
             new PolicyStatement({
                 effect: Effect.ALLOW,
                 resources: [`*`],
