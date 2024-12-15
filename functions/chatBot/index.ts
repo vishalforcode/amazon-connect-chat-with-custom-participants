@@ -4,11 +4,14 @@ import {
     SendMessageCommand,
     SendEventCommand,
 } from "@aws-sdk/client-connectparticipant";
-import { BedrockRuntimeClient, InvokeModelCommand  } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { DynamoDBDocumentClient, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { SNSEvent } from "aws-lambda";
-import { ConnectClient, StopContactStreamingCommand } from "@aws-sdk/client-connect";
+import { SNSEvent, ConnectContactFlowResult, ConnectContactFlowEvent, SQSEvent } from "aws-lambda";
+import { ConnectClient, StopContactStreamingCommand, StartChatContactCommand } from "@aws-sdk/client-connect";
+import { LambdaClient, InvokeCommand } from "@aws-sdk/client-lambda";
+
+const lambdaClient = new LambdaClient();
 
 type StepData = {
     connectionToken: string;
@@ -34,22 +37,64 @@ const bedrockClient = new BedrockRuntimeClient({});
 
 const chatContactsTableName = process.env.CHAT_CONTACTS_TABLE_NAME;
 const instanceId = process.env.INSTANCE_ID;
+const botArn = process.env.PROXY_BOT_ARN;
+const contactFlowArn = process.env.CONTACT_FLOW_ARN
+const targetFlowArn = process.env.TARGET_FLOW_ARN
+const queueArn = process.env.QUEUE_ARN
+
+async function connectToAgent(connectionToken: string, messageObject: any): Promise<undefined | any> {
+
+    // Fetch the contact flow ID from environment variables or configuration
+    const contactFlowId = contactFlowArn?.split('/').pop();
+    const queueId = queueArn?.split('/').pop(); // Get queue ID if needed
+    const targetFlowId = targetFlowArn?.split('/').pop();
+
+    // Send a message saying the user is being transferred
+    await sendMessage(connectionToken, "Transferring to an agent...");
+
+    try {
+        // Start a chat contact with the contact flow and optionally route to a queue
+        const startChatCommand = new StartChatContactCommand(
+            {
+                InstanceId: instanceId, // Required: Instance ID
+                ContactFlowId: targetFlowId, // Required: Contact Flow ID
+                Attributes: {
+                    "queueId": queueId as string,
+                },
+                ParticipantDetails: {
+                    DisplayName: "Vishal", // Required: Display name of the customer
+                },
+                InitialMessage: {
+                    ContentType: "text/plain", // Required: The message content type
+                    Content: "Hello, how can I help you?", // Required: Initial message content
+                }
+            });
+
+        const response = await connectClient.send(startChatCommand);
+        console.log("Chat contact started:", response);
+    } catch (error) {
+        console.error("Error transferring contact to agent:", error);
+    }
+
+}
+
+
 
 export async function handler(event: SNSEvent): Promise<void> {
-    for(const record of event.Records) {
+    for (const record of event.Records) {
         const messageObject = JSON.parse(record.Sns.Message);
         console.log("Message", messageObject);
 
-        if(messageObject.ContactId && messageObject.Content) {
+        if (messageObject.ContactId && messageObject.Content) {
             const chatContact = await getChatContact(messageObject.ContactId);
 
-            if(chatContact?.connectionToken) {
-                if(messageObject.Content.toLowerCase() === "quit") {
+            if (chatContact?.connectionToken) {
+                if (messageObject.Content.toLowerCase() === "connect to agent") {
                     await disconnect(chatContact.connectionToken);
                     await stopChatStreaming(chatContact.contactId, chatContact.streamingId);
                 } else {
                     await sendEvent(chatContact.connectionToken);
-                    const response = await invokeModel(messageObject.Content);
+                    const response = await invokeModelWithLambda(messageObject.Content);
                     await sendMessage(chatContact.connectionToken, response ?? 'error generating answer');
                 }
             } else {
@@ -95,7 +140,7 @@ async function sendEvent(connectionToken: string) {
     }
 }
 
-async function invokeModel(question: string): Promise<string|undefined> {
+async function invokeModel(question: string): Promise<string | undefined> {
     const command = new InvokeModelCommand({
         body: JSON.stringify({
             prompt: `\n\nHuman: ${question} Also provide a very concise answer in less than 500 characters.\n\nAssistant:`,
@@ -103,7 +148,7 @@ async function invokeModel(question: string): Promise<string|undefined> {
         }),
         contentType: 'application/json',
         accept: 'application/json',
-        modelId: 'anthropic.claude-v2',
+        modelId: 'amazon.titan-text-lite-v1',
     });
 
     try {
@@ -112,19 +157,46 @@ async function invokeModel(question: string): Promise<string|undefined> {
 
         // Save the raw response
         const rawRes = response.body;
-        
+
         // Convert it to a JSON String
         const jsonString = new TextDecoder().decode(rawRes);
-        
+
         // Parse the JSON string
         const parsedResponse = JSON.parse(jsonString);
-        
+
         return parsedResponse.completion;
     } catch (error) {
         console.error("Invoking model", { command, error: (error as Error).message });
     }
 
     return undefined;
+}
+
+async function invokeModelWithLambda(question: string): Promise<string | undefined> {
+    const payload = {
+        "query": question,
+    };
+
+    const command = new InvokeCommand({
+        FunctionName: botArn, // Replace with your Lambda function name or ARN
+        Payload: Buffer.from(JSON.stringify(payload)),
+    });
+
+    try {
+        const response = await lambdaClient.send(command);
+        const responsePayload = JSON.parse(
+            new TextDecoder("utf-8").decode(response.Payload)
+        );
+
+        const parsedResponse = JSON.parse(responsePayload.body);
+
+        console.debug("response from proxy", parsedResponse)
+
+        return parsedResponse.summary;
+    } catch (error) {
+        console.error("Error invoking Lambda", error);
+        return undefined;
+    }
 }
 
 async function sendMessage(connectionToken: string, message: string, type = "text/plain"): Promise<undefined | string> {

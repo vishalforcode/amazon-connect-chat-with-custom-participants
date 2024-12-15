@@ -7,18 +7,7 @@
 * `cdk diff`        compare deployed stack with current state
 * `cdk synth`       emits the synthesized CloudFormation template
 
+* `npm install @tsconfig/node20 --save-dev`  
+* `cdk deploy --parameters instanceArn=arn:aws:connect:ap-southeast-2:762233731859:instance/e0393aa3-2dbb-434e-b8ee-364f3db611e7 --parameters targetAgentArn=arn:aws:connect:ap-southeast-2:762233731859:instance/e0393aa3-2dbb-434e-b8ee-364f3db611e7/contact-flow/bc746acc-1746-439d-aa1c-d1a42dc96365 --force`
 
-## Architecture Diagram
-![Architecture Diagram](amazon-connect-custom-bot-architecture.png)
-
-## Sequence Diagram
-![Sequence Diagram](amazon-connect-custom-bot-sequence.png)
-
-## Security
-
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
-
-## License
-
-This library is licensed under the MIT-0 License. See the LICENSE file.
 

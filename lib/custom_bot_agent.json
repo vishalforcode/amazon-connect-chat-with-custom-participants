@@ -19,10 +19,53 @@
           "y": 30.4
         }
       },
+      "5c33806c-e492-4623-b43b-1f9ff34c7f52": {
+        "position": {
+          "x": 53.6,
+          "y": 235.2
+        },
+        "dynamicMetadata": {}
+      },
+      "54ae57ac-c799-4e3a-8c9c-e563b7cfa3d9": {
+        "position": {
+          "x": 572.8,
+          "y": 32
+        }
+      },
       "0b014b7e-3554-4f51-a503-fa0ae191d8d4": {
         "position": {
           "x": 1102.4,
           "y": 348.8
+        }
+      },
+      "16b8ea56-a072-4c5b-870e-09ca356574e2": {
+        "position": {
+          "x": 1034.4,
+          "y": 130.4
+        }
+      },
+      "06f863c4-105a-4f1e-8867-53f30c08137a": {
+        "position": {
+          "x": 288,
+          "y": 236.8
+        },
+        "conditions": [],
+        "conditionMetadata": [
+          {
+            "id": "73296477-6aa4-4806-96a8-773d88fcebc2",
+            "operator": {
+              "name": "Equals",
+              "value": "Equals",
+              "shortDisplay": "="
+            },
+            "value": "success"
+          }
+        ]
+      },
+      "2f101532-766a-4bf8-ba1d-1b43819e1e35": {
+        "position": {
+          "x": 870.4,
+          "y": 431.2
         }
       },
       "698fef92-9e30-4016-bf5c-7c6dd9f07b28": {
@@ -40,49 +83,18 @@
           "value": "minute"
         }
       },
-      "16b8ea56-a072-4c5b-870e-09ca356574e2": {
+      "c77cce40-4e9e-4074-ade5-ba83979be2c4": {
         "position": {
-          "x": 876,
-          "y": 185.6
-        }
-      },
-      "54ae57ac-c799-4e3a-8c9c-e563b7cfa3d9": {
-        "position": {
-          "x": 572.8,
-          "y": 32
-        }
-      },
-      "06f863c4-105a-4f1e-8867-53f30c08137a": {
-        "position": {
-          "x": 288,
-          "y": 236.8
+          "x": 819.2,
+          "y": 34.4
         },
-        "conditions": [],
-        "conditionMetadata": [
-          {
-            "id": "19c1af01-46e0-4599-9176-3b16ce90a441",
-            "operator": {
-              "name": "Equals",
-              "value": "Equals",
-              "shortDisplay": "="
-            },
-            "value": "success"
+        "parameters": {
+          "ContactFlowId": {
+            "displayName": "Sample queue customer"
           }
-        ]
-      },
-      "2f101532-766a-4bf8-ba1d-1b43819e1e35": {
-        "position": {
-          "x": 870.4,
-          "y": 431.2
-        }
-      },
-      "5c33806c-e492-4623-b43b-1f9ff34c7f52": {
-        "position": {
-          "x": 54.4,
-          "y": 236
         },
-        "dynamicMetadata": {
-          "botArn": false
+        "ContactFlow": {
+          "text": "Sample queue customer"
         }
       }
     },
@@ -115,53 +127,47 @@
       }
     },
     {
-      "Parameters": {},
-      "Identifier": "0b014b7e-3554-4f51-a503-fa0ae191d8d4",
-      "Type": "DisconnectParticipant",
-      "Transitions": {}
-    },
-    {
       "Parameters": {
-        "TimeLimitSeconds": "900",
-        "Events": [
-          "BotParticipantDisconnected"
-        ]
+        "LambdaFunctionARN": "NOT_SET",
+        "InvocationTimeLimitSeconds": "3",
+        "LambdaInvocationAttributes": {},
+        "ResponseValidation": {
+          "ResponseType": "STRING_MAP"
+        }
       },
-      "Identifier": "698fef92-9e30-4016-bf5c-7c6dd9f07b28",
-      "Type": "Wait",
+      "Identifier": "5c33806c-e492-4623-b43b-1f9ff34c7f52",
+      "Type": "InvokeLambdaFunction",
       "Transitions": {
-        "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
-        "Conditions": [
-          {
-            "NextAction": "16b8ea56-a072-4c5b-870e-09ca356574e2",
-            "Condition": {
-              "Operator": "Equals",
-              "Operands": [
-                "BotParticipantDisconnected"
-              ]
-            }
-          },
-          {
-            "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
-            "Condition": {
-              "Operator": "Equals",
-              "Operands": [
-                "WaitCompleted"
-              ]
-            }
-          }
-        ],
+        "NextAction": "06f863c4-105a-4f1e-8867-53f30c08137a",
         "Errors": [
-          {
-            "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
-            "ErrorType": "ParticipantNotFound"
-          },
           {
             "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
             "ErrorType": "NoMatchingError"
           }
         ]
       }
+    },
+    {
+      "Parameters": {
+        "Text": "Welcome To Sysmog"
+      },
+      "Identifier": "54ae57ac-c799-4e3a-8c9c-e563b7cfa3d9",
+      "Type": "MessageParticipant",
+      "Transitions": {
+        "NextAction": "5c33806c-e492-4623-b43b-1f9ff34c7f52",
+        "Errors": [
+          {
+            "NextAction": "5c33806c-e492-4623-b43b-1f9ff34c7f52",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {},
+      "Identifier": "0b014b7e-3554-4f51-a503-fa0ae191d8d4",
+      "Type": "DisconnectParticipant",
+      "Transitions": {}
     },
     {
       "Parameters": {
@@ -174,22 +180,6 @@
         "Errors": [
           {
             "NextAction": "0b014b7e-3554-4f51-a503-fa0ae191d8d4",
-            "ErrorType": "NoMatchingError"
-          }
-        ]
-      }
-    },
-    {
-      "Parameters": {
-        "Text": "Welcome.  Initializing custom bot..."
-      },
-      "Identifier": "54ae57ac-c799-4e3a-8c9c-e563b7cfa3d9",
-      "Type": "MessageParticipant",
-      "Transitions": {
-        "NextAction": "5c33806c-e492-4623-b43b-1f9ff34c7f52",
-        "Errors": [
-          {
-            "NextAction": "5c33806c-e492-4623-b43b-1f9ff34c7f52",
             "ErrorType": "NoMatchingError"
           }
         ]
@@ -240,21 +230,58 @@
     },
     {
       "Parameters": {
-        "LambdaFunctionARN": "NOT-SET",
-        "InvocationTimeLimitSeconds": "3",
-        "LambdaInvocationAttributes": {
-        },
-        "ResponseValidation": {
-          "ResponseType": "STRING_MAP"
-        }
+        "TimeLimitSeconds": "900",
+        "Events": [
+          "BotParticipantDisconnected"
+        ]
       },
-      "Identifier": "5c33806c-e492-4623-b43b-1f9ff34c7f52",
-      "Type": "InvokeLambdaFunction",
+      "Identifier": "698fef92-9e30-4016-bf5c-7c6dd9f07b28",
+      "Type": "Wait",
       "Transitions": {
-        "NextAction": "06f863c4-105a-4f1e-8867-53f30c08137a",
+        "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
+        "Conditions": [
+          {
+            "NextAction": "c77cce40-4e9e-4074-ade5-ba83979be2c4",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "BotParticipantDisconnected"
+              ]
+            }
+          },
+          {
+            "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
+            "Condition": {
+              "Operator": "Equals",
+              "Operands": [
+                "WaitCompleted"
+              ]
+            }
+          }
+        ],
         "Errors": [
           {
             "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
+            "ErrorType": "ParticipantNotFound"
+          },
+          {
+            "NextAction": "2f101532-766a-4bf8-ba1d-1b43819e1e35",
+            "ErrorType": "NoMatchingError"
+          }
+        ]
+      }
+    },
+    {
+      "Parameters": {
+        "ContactFlowId": "NOT_SET"
+      },
+      "Identifier": "c77cce40-4e9e-4074-ade5-ba83979be2c4",
+      "Type": "TransferToFlow",
+      "Transitions": {
+        "NextAction": "16b8ea56-a072-4c5b-870e-09ca356574e2",
+        "Errors": [
+          {
+            "NextAction": "16b8ea56-a072-4c5b-870e-09ca356574e2",
             "ErrorType": "NoMatchingError"
           }
         ]

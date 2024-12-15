@@ -10,7 +10,7 @@
     "cdk": "cdk"
   },
   "devDependencies": {
-    "@tsconfig/node20": "^20.1.2",
+    "@tsconfig/node20": "^20.1.4",
     "@types/aws-lambda": "^8.10.119",
     "@types/jest": "^29.5.3",
     "@types/node": "^20.4.5",
@@ -24,8 +24,10 @@
     "@aws-sdk/client-connect": "^3.495.0",
     "@aws-sdk/client-connectparticipant": "^3.495.0",
     "@aws-sdk/client-dynamodb": "^3.495.0",
+    "@aws-sdk/client-lambda": "^3.495.0",
     "@aws-sdk/lib-dynamodb": "^3.495.0",
-    "aws-cdk-lib": "2.122.0",
+    "aws-cdk-lib": "2.156.0",
+    "axios": "^1.7.9",
     "cdk-nag": "^2.27.164",
     "constructs": "^10.0.0"
   }
