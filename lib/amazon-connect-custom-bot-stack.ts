@@ -3,7 +3,7 @@ import { CfnContactFlow, CfnQueue, CfnHoursOfOperation } from "aws-cdk-lib/aws-c
 import { Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
-import { PolicyStatement, Effect, ServicePrincipal, AnyPrincipal } from "aws-cdk-lib/aws-iam";
+import { PolicyStatement, Effect, ServicePrincipal, PolicyDocument,SamlProvider, SamlMetadataDocument, Role, WebIdentityPrincipal, Policy} from "aws-cdk-lib/aws-iam";
 import contactFlowSource from "./custom-chat-bot.json";
 import contactFlowAgentSource from "./custom_bot_agent.json";
 import { NagSuppressions } from "cdk-nag";
@@ -12,6 +12,7 @@ import { SubscriptionFilter, Topic } from "aws-cdk-lib/aws-sns";
 import { Queue } from "aws-cdk-lib/aws-sqs";
 import { LambdaSubscription, SqsSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import * as fs from 'fs';
 
 export class AmazonConnectCustomBotStack extends Stack {
     constructor(scope: Construct, id: string, props?: StackProps) {
@@ -126,8 +127,8 @@ export class AmazonConnectCustomBotStack extends Stack {
             environment: {
                 NODE_OPTIONS: "--enable-source-maps",
                 INSTANCE_ID: instanceId,
-                API_URL: "",
-                API_KEY: ""
+                API_URL: "https://search-api-655783359579.us-central1.run.app/api/search",
+                API_KEY: "1234"
             },
         });
 
@@ -262,6 +263,49 @@ export class AmazonConnectCustomBotStack extends Stack {
 
         chatBot.addEnvironment("CONTACT_FLOW_ARN", contactFlow.attrContactFlowArn)
         chatBot.addEnvironment("QUEUE_ARN", connectQueue.attrQueueArn)
+
+        // Add SAML Provider & Add Policy
+
+        // Read the SAML metadata XML file (replace with the path to your metadata file)
+        const samlMetadata = fs.readFileSync('./lib/OKTA.xml', 'utf8');
+
+        // Create the SAML identity provider
+        const samlIdp = new SamlProvider(this, 'SamlProvider', {
+            metadataDocument: SamlMetadataDocument.fromXml(samlMetadata),
+        });
+
+        // Create an IAM role that trusts the SAML provider
+        const role = new Role(this, 'SamlRole', {
+            assumedBy: new WebIdentityPrincipal(samlIdp.samlProviderArn), // Trust the SAML IdP for assuming the role
+            description: 'Role assumed via SAML identity provider',
+        });
+
+        // Add an inline policy to the role
+        const policyJson = fs.readFileSync('./lib/ccp-access-policy.json', 'utf8');
+        const policyDocument = PolicyDocument.fromJson(JSON.parse(policyJson));
+
+        // Create an inline policy and attach it to the role
+        const inlinePolicy = new Policy(this, 'CCPAccessPolicy', {
+            document: policyDocument,
+        });
+
+        role.attachInlinePolicy(inlinePolicy);
+
+        // role.attachInlinePolicy(new Policy(this, 'CCPAccessInlinePolicy', {
+        //     statements: [
+        //         new PolicyStatement({
+        //             actions: ['s3:ListBucket', 's3:GetObject'], // Add the actions you want to allow
+        //             resources: [
+        //                 'arn:aws:s3:::your-bucket-name', // Bucket ARN
+        //                 'arn:aws:s3:::your-bucket-name/*' // Objects inside the bucket
+        //             ],
+        //         }),
+        //         new PolicyStatement({
+        //             actions: ['ec2:DescribeInstances'], // Another action you can add
+        //             resources: ['*'], // Apply to all EC2 instances
+        //         }),
+        //     ],
+        // }));
 
 
 

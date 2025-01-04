@@ -1,0 +1,23 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "CCPStatusManagement",
+      "Effect": "Allow",
+      "Action": [
+        "connect:UpdateAgentStatus",
+        "connect:StartChatContact",
+        "connect:GetFederationToken"
+      ],
+      "Resource": "*",
+      "Condition": {
+        "StringEquals": {
+          "connect:InstanceId": [
+            "62cd8991-86c5-4a03-bda9-429396393896",
+            "e0393aa3-2dbb-434e-b8ee-364f3db611e"
+          ]
+        }
+      }
+    }
+  ]
+}
