@@ -3,7 +3,7 @@ import { CfnContactFlow, CfnQueue, CfnHoursOfOperation } from "aws-cdk-lib/aws-c
 import { Runtime, Tracing } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Construct } from "constructs";
-import { PolicyStatement, Effect, ServicePrincipal, PolicyDocument,SamlProvider, SamlMetadataDocument, Role, WebIdentityPrincipal, Policy} from "aws-cdk-lib/aws-iam";
+import { PolicyStatement, Effect, ServicePrincipal, PolicyDocument,SamlProvider, SamlMetadataDocument, Role, SamlPrincipal, SamlConsolePrincipal} from "aws-cdk-lib/aws-iam";
 import contactFlowSource from "./custom-chat-bot.json";
 import contactFlowAgentSource from "./custom_bot_agent.json";
 import { NagSuppressions } from "cdk-nag";
@@ -238,31 +238,31 @@ export class AmazonConnectCustomBotStack extends Stack {
             description: "Sysmog Search",
         });
 
-        const hoursOfOperation = new CfnHoursOfOperation(this, 'ConnectHoursOfOperation', {
-            instanceArn: instanceArn,
-            name: '24x7Hours',
-            timeZone: 'Asia/Kolkata',
-            config: [
-                { day: 'MONDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-                { day: 'TUESDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-                { day: 'WEDNESDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-                { day: 'THURSDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-                { day: 'FRIDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-                { day: 'SATURDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-                { day: 'SUNDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
-            ],
-        });
+        // const hoursOfOperation = new CfnHoursOfOperation(this, 'ConnectHoursOfOperation', {
+        //     instanceArn: instanceArn,
+        //     name: '24x7Hours',
+        //     timeZone: 'Asia/Kolkata',
+        //     config: [
+        //         { day: 'MONDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //         { day: 'TUESDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //         { day: 'WEDNESDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //         { day: 'THURSDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //         { day: 'FRIDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //         { day: 'SATURDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //         { day: 'SUNDAY', startTime: { hours: 0, minutes: 0 }, endTime: { hours: 23, minutes: 59 } },
+        //     ],
+        // });
 
-        // Create the Queue using the dynamically created HoursOfOperation ARN
-        const connectQueue = new CfnQueue(this, 'ConnectQueue', {
-            instanceArn: instanceArn,
-            name: 'SupportQueue',
-            description: 'Queue for customer support',
-            hoursOfOperationArn: hoursOfOperation.attrHoursOfOperationArn
-        });
+        // // Create the Queue using the dynamically created HoursOfOperation ARN
+        // const connectQueue = new CfnQueue(this, 'ConnectQueue', {
+        //     instanceArn: instanceArn,
+        //     name: 'SupportQueue',
+        //     description: 'Queue for customer support',
+        //     hoursOfOperationArn: hoursOfOperation.attrHoursOfOperationArn
+        // });
 
         chatBot.addEnvironment("CONTACT_FLOW_ARN", contactFlow.attrContactFlowArn)
-        chatBot.addEnvironment("QUEUE_ARN", connectQueue.attrQueueArn)
+        // chatBot.addEnvironment("QUEUE_ARN", connectQueue.attrQueueArn)
 
         // Add SAML Provider & Add Policy
 
@@ -272,24 +272,27 @@ export class AmazonConnectCustomBotStack extends Stack {
         // Create the SAML identity provider
         const samlIdp = new SamlProvider(this, 'SamlProvider', {
             metadataDocument: SamlMetadataDocument.fromXml(samlMetadata),
+            name : "SysMog-SAML-Provider",
         });
 
-        // Create an IAM role that trusts the SAML provider
-        const role = new Role(this, 'SamlRole', {
-            assumedBy: new WebIdentityPrincipal(samlIdp.samlProviderArn), // Trust the SAML IdP for assuming the role
-            description: 'Role assumed via SAML identity provider',
-        });
+        // Create an IAM role that trusts the SAML provider for console access
+        const samlFederationRolePrincipal = new SamlConsolePrincipal(samlIdp, {
+            StringEquals: { 'SAML:aud': 'https://signin.aws.amazon.com/saml' },
+        }).withSessionTags();
 
         // Add an inline policy to the role
         const policyJson = fs.readFileSync('./lib/ccp-access-policy.json', 'utf8');
         const policyDocument = PolicyDocument.fromJson(JSON.parse(policyJson));
 
-        // Create an inline policy and attach it to the role
-        const inlinePolicy = new Policy(this, 'CCPAccessPolicy', {
-            document: policyDocument,
+        // Create the IAM role with the SAML principal
+        // Create the IAM role with the SAML principal
+        const samlFederationRole = new Role(this, 'SamlFederationRole', {
+            assumedBy: samlFederationRolePrincipal,
+            inlinePolicies: {
+                CCPAccessPolicy: policyDocument,
+            },
+            roleName : "SysMog-SAML-Provider-Role",
         });
-
-        role.attachInlinePolicy(inlinePolicy);
 
         // role.attachInlinePolicy(new Policy(this, 'CCPAccessInlinePolicy', {
         //     statements: [

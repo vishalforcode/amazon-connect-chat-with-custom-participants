@@ -46,7 +46,7 @@ async function connectToAgent(connectionToken: string, messageObject: any): Prom
 
     // Fetch the contact flow ID from environment variables or configuration
     const contactFlowId = contactFlowArn?.split('/').pop();
-    const queueId = queueArn?.split('/').pop(); // Get queue ID if needed
+    // const queueId = queueArn?.split('/').pop(); // Get queue ID if needed
     const targetFlowId = targetFlowArn?.split('/').pop();
 
     // Send a message saying the user is being transferred
@@ -58,11 +58,11 @@ async function connectToAgent(connectionToken: string, messageObject: any): Prom
             {
                 InstanceId: instanceId, // Required: Instance ID
                 ContactFlowId: targetFlowId, // Required: Contact Flow ID
-                Attributes: {
-                    "queueId": queueId as string,
-                },
+                // Attributes: {
+                //     "queueId": queueId as string,
+                // },
                 ParticipantDetails: {
-                    DisplayName: "Vishal", // Required: Display name of the customer
+                    DisplayName: "Customer", // Required: Display name of the customer
                 },
                 InitialMessage: {
                     ContentType: "text/plain", // Required: The message content type
